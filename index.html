@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🎮 Rock Paper Scissors</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: linear-gradient(135deg, #ffecd2, #fcb69f);
+      padding-top: 50px;
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    h1 {
+      font-size: 50px;
+      margin-bottom: 30px;
+    }
+
+    .home-screen, .game-screen, .end-screen {
+      display: none;
+    }
+
+    .active {
+      display: block;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+
+    .buttons button {
+      font-size: 100px;
+      padding: 20px 30px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      background: #ffffff;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .buttons button:hover {
+      transform: scale(1.2);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    }
+
+    .buttons button:active {
+      transform: scale(1.1);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    #result {
+      font-size: 24px;
+      background: #ffffffcc;
+      padding: 20px 30px;
+      border-radius: 20px;
+      display: inline-block;
+    }
+
+    .start-button {
+      font-size: 36px;
+      padding: 20px 40px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      background: #ffcc00;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+
+    .start-button:hover {
+      transform: scale(1.1);
+    }
+
+    .options {
+      margin: 20px 0;
+      font-size: 24px;
+    }
+
+    .countdown {
+      font-size: 80px;
+      margin: 40px 0;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+
+    .confetti {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 9999;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: red;
+      opacity: 0.8;
+      animation: fall 3s linear infinite;
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(-10px) rotate(0deg); }
+      100% { transform: translateY(100vh) rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+      .buttons button {
+        font-size: 150px;
+        padding: 30px 40px;
+      }
+      h1 {
+        font-size: 50px;
+      }
+      #result {
+        font-size: 28px;
+        padding: 25px 30px;
+      }
+      .start-button {
+        font-size: 48px;
+        padding: 25px 50px;
+      }
+      .options {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Home Screen -->
+  <div class="home-screen active" id="homeScreen">
+    <h1>🪨 📄 ✂️ Rock Paper Scissors</h1>
+    <div class="options">
+      <label for="rounds">Choose rounds:</label>
+      <select id="rounds">
+        <option value="1">Best of 1</option>
+        <option value="3" selected>Best of 3</option>
+        <option value="5">Best of 5</option>
+      </select>
+    </div>
+    <button class="start-button" onclick="startCountdown()">Start Game 🎮</button>
+    <div id="countdown" class="countdown"></div>
+  </div>
+
+  <!-- Game Screen -->
+  <div class="game-screen" id="gameScreen">
+    <h1>🪨 📄 ✂️ Make Your Move!</h1>
+    <div class="buttons">
+      <button onclick="playGame('rock')">🪨</button>
+      <button onclick="playGame('paper')">📄</button>
+      <button onclick="playGame('scissors')">✂️</button>
+    </div>
+    <div id="result">🤔 Make your move!</div>
+    <button class="start-button" onclick="goHome()">🏠 Home</button>
+  </div>
+
+  <!-- End Screen -->
+  <div class="end-screen" id="endScreen">
+    <h1 id="endMessage">Game Over</h1>
+    <button class="start-button" onclick="goHomeFromEnd()">🏠 Back to Home</button>
+  </div>
+
+  <div class="confetti" id="confettiContainer"></div>
+
+  <script>
+    let totalRounds = 3;
+    let playerScore = 0;
+    let computerScore = 0;
+    let gameActive = false;
+
+    function startCountdown() {
+      totalRounds = parseInt(document.getElementById('rounds').value);
+      playerScore = 0;
+      computerScore = 0;
+      gameActive = true;
+
+      let counter = 3;
+      const countdownEl = document.getElementById('countdown');
+      countdownEl.textContent = counter;
+
+      const interval = setInterval(() => {
+        counter--;
+        if(counter > 0) {
+          countdownEl.textContent = counter;
+        } else {
+          clearInterval(interval);
+          countdownEl.textContent = '';
+        }
+      }, 1000);
+
+      // Keep home screen visible during countdown
+      document.getElementById('homeScreen').classList.add('active');
+      document.getElementById('endScreen').classList.remove('active');
+
+      setTimeout(() => {
+        document.getElementById('homeScreen').classList.remove('active');
+        document.getElementById('gameScreen').classList.add('active');
+        document.getElementById('result').innerHTML = `First to ${Math.ceil(totalRounds/2)} wins! Make your move.`;
+      }, 3000);
+    }
+
+    function goHome() {
+      gameActive = false;
+      document.getElementById('gameScreen').classList.remove('active');
+      document.getElementById('homeScreen').classList.add('active');
+      clearConfetti();
+    }
+
+    function goHomeFromEnd() {
+      gameActive = false;
+      document.getElementById('endScreen').classList.remove('active');
+      document.getElementById('homeScreen').classList.add('active');
+      clearConfetti();
+    }
+
+    function playGame(playerChoice) {
+      if(!gameActive) return;
+      const choices = ['rock','paper','scissors'];
+      const emojis = { rock: '🪨', paper: '📄', scissors: '✂️' };
+      const computerChoice = choices[Math.floor(Math.random()*3)];
+      let roundResult = '';
+
+      if(playerChoice === computerChoice) {
+        roundResult = "It's a Draw!";
+      } else if (
+        (playerChoice==='rock' && computerChoice==='scissors') ||
+        (playerChoice==='paper' && computerChoice==='rock') ||
+        (playerChoice==='scissors' && computerChoice==='paper')
+      ) {
+        playerScore++;
+        roundResult = 'You Win this round!';
+      } else {
+        computerScore++;
+        roundResult = 'Computer Wins this round!';
+      }
+
+      let gameOver = false;
+      let winnerMessage = '';
+      if(playerScore > Math.floor(totalRounds/2)) {
+        winnerMessage = '🎉 You won the game!';
+        gameOver = true;
+        playWinSound();
+      } else if(computerScore > Math.floor(totalRounds/2)) {
+        winnerMessage = '😢 Computer won the game!';
+        gameOver = true;
+        playLoseSound();
+      }
+
+      document.getElementById('result').innerHTML =
+        `You: ${emojis[playerChoice]} | Computer: ${emojis[computerChoice]}<br>` +
+        `<b>${roundResult}</b><br>` +
+        `Score: You ${playerScore} - ${computerScore} Computer<br>` +
+        (gameOver ? `<b>${winnerMessage}</b>` : `First to ${Math.ceil(totalRounds/2)} wins!`);
+
+      if(gameOver) {
+        gameActive = false;
+        setTimeout(() => showEndScreen(winnerMessage), 500);
+      }
+    }
+
+    function showEndScreen(message) {
+      document.getElementById('gameScreen').classList.remove('active');
+      document.getElementById('endMessage').textContent = message;
+      document.getElementById('endScreen').classList.add('active');
+      startConfetti();
+    }
+
+    function startConfetti() {
+      const container = document.getElementById('confettiContainer');
+      for(let i=0;i<100;i++) {
+        const confetti = document.createElement('div');
+        confetti.classList.add('confetti-piece');
+        confetti.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
+        confetti.style.left = `${Math.random()*100}%`;
+        confetti.style.animationDuration = `${2 + Math.random()*2}s`;
+        container.appendChild(confetti);
+      }
+    }
+
+    function clearConfetti() {
+      const container = document.getElementById('confettiContainer');
+      container.innerHTML = '';
+    }
+
+    function playWinSound() {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.type = 'triangle';
+      oscillator.frequency.value = 600;
+      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.5);
+    }
+
+    function playLoseSound() {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.type = 'triangle';
+      oscillator.frequency.value = 200;
+      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.5);
+    }
+  </script>
+
+</body>
+</html>
